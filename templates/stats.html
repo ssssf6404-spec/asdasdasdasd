@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика: {{ habit.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-white">Главная</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Статистика</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-body p-4">
+                <!-- Заголовок -->
+                <div class="text-center mb-4">
+                    <i class="fas fa-chart-line fa-3x text-primary"></i>
+                    <h2 class="mt-2">{{ habit.name }}</h2>
+                    <p class="text-muted">
+                        <i class="fas fa-bullseye"></i> Цель: {{ habit.goal }} {{ habit.unit }} в день
+                    </p>
+                </div>
+                
+                <!-- Сводная статистика -->
+                {% set completed_days = stats|selectattr('completed')|list|length %}
+                {% set total_days = stats|length %}
+                {% set success_rate = (completed_days / total_days * 100)|round %}
+                
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3 text-center bg-light">
+                            <i class="fas fa-calendar-week fa-2x text-primary"></i>
+                            <h3 class="mt-2">{{ total_days }}</h3>
+                            <p class="text-muted mb-0">Всего дней</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3 text-center {% if success_rate >= 70 %}bg-success{% elif success_rate >= 40 %}bg-warning{% else %}bg-danger{% endif %} text-white">
+                            <i class="fas fa-percentage fa-2x"></i>
+                            <h3 class="mt-2">{{ success_rate }}%</h3>
+                            <p class="mb-0">Успешность</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3 text-center bg-info text-white">
+                            <i class="fas fa-trophy fa-2x"></i>
+                            <h3 class="mt-2">{{ completed_days }}</h3>
+                            <p class="mb-0">Дней выполнено</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- График прогресса -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-chart-bar"></i> Прогресс за последние 7 дней
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Результат</th>
+                                    <th>Прогресс</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in stats %}
+                                <tr class="{{ 'table-success' if stat.completed else 'table-danger' }}">
+                                    <td>
+                                        <strong>{{ stat.date }}</strong>
+                                    </td>
+                                    <td>
+                                        {{ stat.count }} / {{ stat.goal }} {{ habit.unit }}
+                                    </td>
+                                    <td style="width: 40%;">
+                                        <div class="progress" style="height: 25px;">
+                                            {% set percentage = (stat.count / stat.goal * 100) if stat.goal > 0 else 0 %}
+                                            <div class="progress-bar {% if stat.completed %}bg-success{% else %}bg-danger{% endif %}" 
+                                                 style="width: {{ percentage if percentage <= 100 else 100 }}%">
+                                                {{ percentage|round }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if stat.completed %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle"></i> Выполнено
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle"></i> Не выполнено
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Мотивационные советы -->
+                {% if success_rate < 50 %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Совет:</strong> Попробуйте установить напоминания или привязать привычку к ежедневному действию. 
+                    Маленькие шаги каждый день приводят к большим результатам!
+                </div>
+                {% elif success_rate < 80 %}
+                <div class="alert alert-info">
+                    <i class="fas fa-smile"></i>
+                    <strong>Отлично!</strong> Вы на правильном пути. Продолжайте в том же духе. Вы уже лучше, чем вчера!
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-star"></i>
+                    <strong>Превосходно!</strong> Вы показываете отличные результаты! Так держать! 🎉
+                </div>
+                {% endif %}
+                
+                <!-- Кнопки действий -->
+                <div class="d-flex gap-2 mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary flex-grow-1">
+                        <i class="fas fa-arrow-left"></i> Назад к привычкам
+                    </a>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print"></i> Печать
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table td, .table th {
+        vertical-align: middle;
+    }
+    
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    @media print {
+        .navbar, .footer, .btn, .breadcrumb, .alert {
+            display: none !important;
+        }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd;
+        }
+        body {
+            background: white;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Анимация загрузки прогресс-баров
+    document.addEventListener('DOMContentLoaded', function() {
+        const progressBars = document.querySelectorAll('.progress-bar');
+        progressBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    });
+    
+    // Добавляем подсказки к статистике
+    const rows = document.querySelectorAll('.table tbody tr');
+    rows.forEach(row => {
+        row.addEventListener('click', function() {
+            const date = this.cells[0].innerText;
+            const result = this.cells[1].innerText;
+            alert(`Дата: ${date}\nРезультат: ${result}`);
+        });
+    });
+</script>
+{% endblock %}

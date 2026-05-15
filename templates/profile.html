@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Мой профиль{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-circle fa-3x text-primary"></i>
+                    <h3 class="mt-2">Мой профиль</h3>
+                    <p class="text-muted">Управляйте своими данными</p>
+                </div>
+                
+                <div class="text-center mb-4">
+                    <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" 
+                         class="large-avatar mb-3" 
+                         alt="avatar"
+                         onerror="this.src='https://via.placeholder.com/150?text=User'">
+                    <div>
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-calendar-alt"></i> 
+                            Зарегистрирован: {{ user.created_at.strftime('%d.%m.%Y') }}
+                        </span>
+                    </div>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            {{ form.username(class="form-control") }}
+                        </div>
+                        {% for error in form.username.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            {{ form.email(class="form-control") }}
+                        </div>
+                        {% for error in form.email.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.avatar.label(class="form-label") }}
+                        {{ form.avatar(class="form-control") }}
+                        {% for error in form.avatar.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Поддерживаемые форматы: JPG, PNG, GIF. Максимальный размер: 16MB
+                        </small>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-shield-alt"></i> 
+                        <small>Ваши данные в безопасности. Мы не передаём их третьим лицам.</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        {{ form.submit(class="btn btn-gradient btn-lg") }}
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Вернуться на главную
+                        </a>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <h5>Статистика аккаунта</h5>
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                                <h4 class="mt-2">{{ user.habits|length }}</h4>
+                                <p class="text-muted mb-0">Привычек создано</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-chart-line fa-2x text-primary"></i>
+                                <h4 class="mt-2">
+                                    {% set total = namespace(value=0) %}
+                                    {% for habit in user.habits %}
+                                        {% set progress = habit.get_progress() %}
+                                        {% set total.value = total.value + progress|length %}
+                                    {% endfor %}
+                                    {{ total.value }}
+                                </h4>
+                                <p class="text-muted mb-0">Всего выполнений</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .large-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #667eea;
+        padding: 3px;
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Предпросмотр аватара перед загрузкой
+    document.getElementById('avatar').addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(loadEvent) {
+                const img = document.querySelector('.large-avatar');
+                img.src = loadEvent.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+    
+    // Валидация формы перед отправкой
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const avatar = document.getElementById('avatar');
+        if (avatar.files.length > 0) {
+            const file = avatar.files[0];
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                alert('Пожалуйста, выберите изображение в формате JPG, PNG или GIF');
+                e.preventDefault();
+            }
+            if (file.size > 16 * 1024 * 1024) {
+                alert('Размер файла не должен превышать 16MB');
+                e.preventDefault();
+            }
+        }
+    });
+</script>
+{% endblock %}

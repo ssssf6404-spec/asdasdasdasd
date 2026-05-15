@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить привычку{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-plus-circle fa-3x text-primary"></i>
+                    <h3 class="mt-2">Новая привычка</h3>
+                    <p class="text-muted">Создайте полезную привычку, которая изменит вашу жизнь</p>
+                </div>
+                
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control", placeholder="Например: Читать книги, Пить воду, Зарядка") }}
+                        {% for error in form.name.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                        <small class="text-muted">Краткое и понятное название</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3", placeholder="Подробное описание привычки...") }}
+                        {% for error in form.description.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                        <small class="text-muted">Необязательное поле</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.goal.label(class="form-label") }}
+                            {{ form.goal(class="form-control", type="number", min="1") }}
+                            {% for error in form.goal.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.unit.label(class="form-label") }}
+                            {{ form.unit(class="form-control", placeholder="раз, минут, км...") }}
+                            {% for error in form.unit.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> 
+                        <small>Пример: Если ваша цель "Прочитать 30 страниц", то укажите цель 30 и единицу "страниц"</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        {{ form.submit(class="btn btn-gradient btn-lg") }}
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Автоматическое форматирование названия с заглавной буквы
+    document.getElementById('name').addEventListener('blur', function() {
+        if (this.value) {
+            this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1).toLowerCase();
+        }
+    });
+</script>
+{% endblock %}
