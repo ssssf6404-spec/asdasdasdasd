@@ -8,7 +8,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
-# Импортируем модели и формы
+
 from models import db, User, Habit, Quote
 from forms import RegistrationForm, LoginForm, HabitForm, ProfileForm
 
@@ -21,13 +21,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 
-# Создаем папку для загрузок
+
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Инициализация БД
+
 db.init_app(app)
 
-# Настройка Flask-Login
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -39,7 +39,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-# Создание таблиц
+
 with app.app_context():
     db.create_all()
 
@@ -68,7 +68,6 @@ def get_motivational_quote():
 
 @app.context_processor
 def inject_quote():
-    """Добавляет цитату на все страницы"""
     # Получаем цитату из сессии или API
     if 'daily_quote' not in session or session.get('quote_date') != date.today().isoformat():
         quote = get_motivational_quote()
@@ -80,7 +79,6 @@ def inject_quote():
 
 @app.route('/')
 def index():
-    """Главная страница"""
     if current_user.is_authenticated:
         habits = Habit.query.filter_by(user_id=current_user.id).all()
         today = date.today().isoformat()
@@ -155,18 +153,14 @@ def profile():
 
             if form.avatar.data:
                 file = form.avatar.data
-                # Генерируем уникальное имя файла
                 filename = secure_filename(
                     f"user_{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
-
-                # Удаляем старый аватар, если это не стандартный
                 if current_user.avatar != 'default.png' and current_user.avatar:
                     old_avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], current_user.avatar)
                     if os.path.exists(old_avatar_path):
                         os.remove(old_avatar_path)
-
                 current_user.avatar = filename
 
             db.session.commit()
@@ -175,7 +169,6 @@ def profile():
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при обновлении профиля: {str(e)}', 'danger')
-
     return render_template('profile.html', form=form, user=current_user)
 
 
@@ -199,7 +192,6 @@ def add_habit():
         except Exception as e:
             db.session.rollback()
             flash(f'Ошибка при добавлении привычки: {str(e)}', 'danger')
-
     return render_template('add_habit.html', form=form)
 
 
@@ -287,7 +279,6 @@ def complete_habit(habit_id):
 @app.route('/api/habits', methods=['GET'])
 @login_required
 def api_get_habits():
-    """API: Получить все привычки пользователя"""
     habits = Habit.query.filter_by(user_id=current_user.id).all()
     return jsonify([{
         'id': h.id,
@@ -303,12 +294,10 @@ def api_get_habits():
 @app.route('/api/habits/<int:habit_id>/progress', methods=['GET'])
 @login_required
 def api_get_progress(habit_id):
-    """API: Получить прогресс привычки за неделю"""
     habit = Habit.query.get_or_404(habit_id)
 
     if habit.user_id != current_user.id:
         return jsonify({'error': 'Access denied'}), 403
-
     stats = habit.get_weekly_stats()
     return jsonify({
         'habit': habit.name,
@@ -321,11 +310,9 @@ def api_get_progress(habit_id):
 @login_required
 def habit_stats(habit_id):
     habit = Habit.query.get_or_404(habit_id)
-
     if habit.user_id != current_user.id:
         flash('Доступ запрещен', 'danger')
         return redirect(url_for('index'))
-
     stats = habit.get_weekly_stats()
     return render_template('stats.html', habit=habit, stats=stats)
 

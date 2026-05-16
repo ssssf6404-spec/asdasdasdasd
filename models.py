@@ -36,18 +36,15 @@ class Habit(db.Model):
     progress_data = db.Column(db.Text, default='{}')
 
     def get_progress(self):
-        """Возвращает прогресс как словарь"""
         try:
             return json.loads(self.progress_data) if self.progress_data else {}
         except:
             return {}
 
     def set_progress(self, progress_dict):
-        """Сохраняет прогресс из словаря"""
         self.progress_data = json.dumps(progress_dict, ensure_ascii=False)
 
     def add_progress(self, date_str, count=1):
-        """Добавляет прогресс за конкретную дату"""
         progress = self.get_progress()
         current = progress.get(date_str, 0)
         progress[date_str] = current + count
@@ -55,13 +52,11 @@ class Habit(db.Model):
         db.session.commit()
 
     def get_today_progress(self):
-        """Возвращает прогресс за сегодня"""
         today = date.today().isoformat()
         progress = self.get_progress()
         return progress.get(today, 0)
 
     def get_weekly_stats(self):
-        """Возвращает статистику за неделю"""
         stats = []
         progress = self.get_progress()
         for i in range(7):
@@ -78,7 +73,6 @@ class Habit(db.Model):
 
 
 class Quote(db.Model):
-    """Модель для хранения цитат из API"""
     __tablename__ = 'quotes'
 
     id = db.Column(db.Integer, primary_key=True)
